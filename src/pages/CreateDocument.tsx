@@ -13,6 +13,8 @@ import {
   Phone,
   CheckCircle2,
   Loader2,
+  Download,
+  FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +22,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { exportToPDF, exportToWord, getDocumentContent, type DocumentData } from "@/lib/documentGenerator";
 
 type DocumentType = "termos-de-uso" | "politica-de-privacidade";
 type PersonType = "pf" | "pj";
@@ -76,6 +80,8 @@ const CreateDocument = () => {
   const documentTypeParam = searchParams.get("type") as DocumentType;
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [generatedContent, setGeneratedContent] = useState<string>("");
   
   const [formData, setFormData] = useState<FormData>({
     documentType: documentTypeParam || "termos-de-uso",
@@ -168,16 +174,179 @@ const CreateDocument = () => {
   const handleSubmit = async () => {
     setIsGenerating(true);
 
-    // Simulate document generation
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Preparar dados para geração
+      const documentData: DocumentData = {
+        type: formData.documentType,
+        personType: formData.personType === "pf" ? "PF" : "PJ",
+        name: formData.companyName,
+        cpfCnpj: formData.document,
+        serviceDescription: formData.serviceDescription,
+        email: formData.email,
+        phone: formData.phone,
+        website: formData.website,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        dpoEmail: formData.dpoEmail,
+      };
 
-    toast({
-      title: "Documento gerado!",
-      description: "Seu documento está pronto para download.",
-    });
+      // Adicionar dados específicos do tipo de documento
+      if (formData.documentType === "termos-de-uso") {
+        const features: string[] = [];
+        if (formData.hasCookies) features.push("Uso de cookies e tecnologias de rastreamento");
+        if (formData.hasPayments) features.push("Processamento de pagamentos");
+        if (formData.hasSocialLogin) features.push("Login através de redes sociais");
+        if (formData.hasAnalytics) features.push("Coleta de dados analíticos");
+        if (formData.hasUserContent) features.push("Publicação de conteúdo por usuários");
+        documentData.features = features;
+      } else {
+        const dataTypeLabels: Record<string, string> = {
+          nome: "Nome completo",
+          email: "Endereço de email",
+          telefone: "Número de telefone",
+          cpf: "CPF",
+          endereco: "Endereço completo",
+          pagamento: "Dados de pagamento (cartão, etc.)",
+          navegacao: "Dados de navegação (IP, cookies, user agent)",
+          localizacao: "Dados de localização geográfica",
+        };
+        documentData.dataTypes = formData.dataTypes.map(type => dataTypeLabels[type] || type);
+      }
 
-    setIsGenerating(false);
-    navigate("/dashboard");
+      // Gerar conteúdo do documento
+      const content = getDocumentContent(documentData);
+      setGeneratedContent(content);
+
+      // Simular tempo de processamento
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      setIsGenerating(false);
+      setShowDownloadModal(true);
+
+      toast({
+        title: "Documento gerado!",
+        description: "Seu documento está pronto para download.",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar documento:", error);
+      toast({
+        title: "Erro ao gerar documento",
+        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const documentData: DocumentData = {
+        type: formData.documentType,
+        personType: formData.personType === "pf" ? "PF" : "PJ",
+        name: formData.companyName,
+        cpfCnpj: formData.document,
+        serviceDescription: formData.serviceDescription,
+        email: formData.email,
+        phone: formData.phone,
+        website: formData.website,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        dpoEmail: formData.dpoEmail,
+      };
+
+      if (formData.documentType === "termos-de-uso") {
+        const features: string[] = [];
+        if (formData.hasCookies) features.push("Uso de cookies e tecnologias de rastreamento");
+        if (formData.hasPayments) features.push("Processamento de pagamentos");
+        if (formData.hasSocialLogin) features.push("Login através de redes sociais");
+        if (formData.hasAnalytics) features.push("Coleta de dados analíticos");
+        if (formData.hasUserContent) features.push("Publicação de conteúdo por usuários");
+        documentData.features = features;
+      } else {
+        const dataTypeLabels: Record<string, string> = {
+          nome: "Nome completo",
+          email: "Endereço de email",
+          telefone: "Número de telefone",
+          cpf: "CPF",
+          endereco: "Endereço completo",
+          pagamento: "Dados de pagamento (cartão, etc.)",
+          navegacao: "Dados de navegação (IP, cookies, user agent)",
+          localizacao: "Dados de localização geográfica",
+        };
+        documentData.dataTypes = formData.dataTypes.map(type => dataTypeLabels[type] || type);
+      }
+
+      await exportToPDF(documentData);
+      
+      toast({
+        title: "PDF baixado!",
+        description: "O documento foi salvo em formato PDF.",
+      });
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+      toast({
+        title: "Erro ao exportar PDF",
+        description: "Ocorreu um erro ao exportar o documento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    try {
+      const documentData: DocumentData = {
+        type: formData.documentType,
+        personType: formData.personType === "pf" ? "PF" : "PJ",
+        name: formData.companyName,
+        cpfCnpj: formData.document,
+        serviceDescription: formData.serviceDescription,
+        email: formData.email,
+        phone: formData.phone,
+        website: formData.website,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        dpoEmail: formData.dpoEmail,
+      };
+
+      if (formData.documentType === "termos-de-uso") {
+        const features: string[] = [];
+        if (formData.hasCookies) features.push("Uso de cookies e tecnologias de rastreamento");
+        if (formData.hasPayments) features.push("Processamento de pagamentos");
+        if (formData.hasSocialLogin) features.push("Login através de redes sociais");
+        if (formData.hasAnalytics) features.push("Coleta de dados analíticos");
+        if (formData.hasUserContent) features.push("Publicação de conteúdo por usuários");
+        documentData.features = features;
+      } else {
+        const dataTypeLabels: Record<string, string> = {
+          nome: "Nome completo",
+          email: "Endereço de email",
+          telefone: "Número de telefone",
+          cpf: "CPF",
+          endereco: "Endereço completo",
+          pagamento: "Dados de pagamento (cartão, etc.)",
+          navegacao: "Dados de navegação (IP, cookies, user agent)",
+          localizacao: "Dados de localização geográfica",
+        };
+        documentData.dataTypes = formData.dataTypes.map(type => dataTypeLabels[type] || type);
+      }
+
+      await exportToWord(documentData);
+      
+      toast({
+        title: "Word baixado!",
+        description: "O documento foi salvo em formato Word.",
+      });
+    } catch (error) {
+      console.error("Erro ao exportar Word:", error);
+      toast({
+        title: "Erro ao exportar Word",
+        description: "Ocorreu um erro ao exportar o documento.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
@@ -827,6 +996,87 @@ const CreateDocument = () => {
             )}
           </div>
         </div>
+
+        {/* Download Modal */}
+        <Dialog open={showDownloadModal} onOpenChange={setShowDownloadModal}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle2 className="w-6 h-6 text-green-500" />
+                Documento gerado com sucesso!
+              </DialogTitle>
+              <DialogDescription>
+                Escolha o formato para fazer o download do seu documento
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Preview do Conteúdo */}
+              <div className="border rounded-lg p-4 bg-secondary/50 max-h-[300px] overflow-y-auto">
+                <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Preview:</h4>
+                <pre className="text-xs whitespace-pre-wrap font-mono">
+                  {generatedContent.substring(0, 500)}...
+                </pre>
+              </div>
+
+              {/* Botões de Download */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleDownloadPDF}
+                  className="h-auto py-6 flex flex-col items-center gap-3 hover:border-accent hover:bg-accent/5"
+                >
+                  <FileDown className="w-8 h-8 text-red-500" />
+                  <div className="text-center">
+                    <div className="font-semibold">Baixar PDF</div>
+                    <div className="text-xs text-muted-foreground">Formato universal</div>
+                  </div>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleDownloadWord}
+                  className="h-auto py-6 flex flex-col items-center gap-3 hover:border-accent hover:bg-accent/5"
+                >
+                  <FileDown className="w-8 h-8 text-blue-500" />
+                  <div className="text-center">
+                    <div className="font-semibold">Baixar Word</div>
+                    <div className="text-xs text-muted-foreground">Formato editável</div>
+                  </div>
+                </Button>
+              </div>
+
+              {/* Informações adicionais */}
+              <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium mb-1">Documento em conformidade com LGPD</p>
+                    <p className="text-muted-foreground text-xs">
+                      Este documento foi gerado seguindo as diretrizes da Lei Geral de Proteção de Dados (Lei 13.709/2018).
+                      Você pode editar o arquivo Word conforme necessário.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botão para ir ao Dashboard */}
+              <Button
+                variant="hero"
+                className="w-full"
+                onClick={() => {
+                  setShowDownloadModal(false);
+                  navigate("/dashboard");
+                }}
+              >
+                Ir para Meus Contratos
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
