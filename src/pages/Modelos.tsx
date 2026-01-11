@@ -354,7 +354,7 @@ const Modelos = () => {
                           </div>
                           <div className="mt-4 flex justify-end">
                             <Button variant="hero" asChild>
-                              <Link to="/auth?mode=signup">
+                              <Link to={`/create-document?type=${contract.id === 1 ? 'termos-de-uso' : 'politica-de-privacidade'}`}>
                                 Usar este modelo
                                 <ArrowRight className="w-4 h-4 ml-1" />
                               </Link>
@@ -363,7 +363,9 @@ const Modelos = () => {
                         </DialogContent>
                       </Dialog>
                       <Button variant="accent" size="sm" asChild>
-                        <Link to="/auth?mode=signup">Usar</Link>
+                        <Link to={`/create-document?type=${contract.id === 1 ? 'termos-de-uso' : 'politica-de-privacidade'}`}>
+                          Usar
+                        </Link>
                       </Button>
                     </div>
                   </div>

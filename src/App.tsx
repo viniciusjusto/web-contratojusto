@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Checkout from "./pages/Checkout";
+import CreateDocument from "./pages/CreateDocument";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,14 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route
+              path="/create-document"
+              element={
+                <ProtectedRoute>
+                  <CreateDocument />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={
