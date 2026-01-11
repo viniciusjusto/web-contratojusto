@@ -32,10 +32,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 type ContractStatus = "draft" | "completed";
 
@@ -47,41 +47,6 @@ interface Contract {
   updatedAt: string;
   createdAt: string;
 }
-
-const mockContracts: Contract[] = [
-  {
-    id: 1,
-    title: "Contrato de Prestação - ABC Tech",
-    type: "Prestação de Serviços",
-    status: "completed",
-    updatedAt: "2024-01-15",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: 2,
-    title: "NDA - Projeto X",
-    type: "NDA / Confidencialidade",
-    status: "draft",
-    updatedAt: "2024-01-14",
-    createdAt: "2024-01-14",
-  },
-  {
-    id: 3,
-    title: "Contrato Freelancer - Design",
-    type: "Freelancer",
-    status: "completed",
-    updatedAt: "2024-01-12",
-    createdAt: "2024-01-08",
-  },
-  {
-    id: 4,
-    title: "Parceria Comercial - XYZ",
-    type: "Parceria",
-    status: "draft",
-    updatedAt: "2024-01-11",
-    createdAt: "2024-01-11",
-  },
-];
 
 const statusConfig = {
   draft: {
@@ -98,7 +63,8 @@ const statusConfig = {
 
 const Dashboard = () => {
   const { toast } = useToast();
-  const [contracts, setContracts] = useState(mockContracts);
+  const { user, signOut } = useAuth();
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | ContractStatus>("all");
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -145,6 +111,10 @@ const Dashboard = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navbar */}
@@ -166,32 +136,34 @@ const Dashboard = () => {
                   <User className="w-4 h-4 text-accent" />
                 </div>
                 <span className="text-sm font-medium text-foreground hidden sm:block">
-                  João Silva
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário'}
                 </span>
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="px-3 py-2">
-                <p className="text-sm font-medium text-foreground">João Silva</p>
-                <p className="text-xs text-muted-foreground">joao@empresa.com</p>
+                <p className="text-sm font-medium text-foreground">
+                  {user?.user_metadata?.full_name || 'Usuário'}
+                </p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <User className="w-4 h-4 mr-2" />
                 Meu perfil
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Crown className="w-4 h-4 mr-2" />
-                <span>Plano Free</span>
-                <span className="ml-auto text-xs text-accent">Upgrade</span>
+              <DropdownMenuItem asChild>
+                <Link to="/precos" className="flex items-center">
+                  <Crown className="w-4 h-4 mr-2" />
+                  <span>Meu Plano</span>
+                  <span className="ml-auto text-xs text-accent">Ver planos</span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/" className="flex items-center">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
-                </Link>
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -254,10 +226,14 @@ const Dashboard = () => {
         {filteredContracts.length === 0 ? (
           <div className="text-center py-16 bg-card rounded-2xl shadow-card">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-muted-foreground" />
+              {search ? (
+                <AlertCircle className="w-8 h-8 text-muted-foreground" />
+              ) : (
+                <FileText className="w-8 h-8 text-muted-foreground" />
+              )}
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              Nenhum contrato encontrado
+              {search ? "Nenhum contrato encontrado" : "Você ainda não tem contratos"}
             </h3>
             <p className="text-muted-foreground mb-6">
               {search
@@ -267,7 +243,7 @@ const Dashboard = () => {
             <Button variant="hero" asChild>
               <Link to="/modelos">
                 <Plus className="w-4 h-4 mr-2" />
-                Criar contrato
+                Criar primeiro contrato
               </Link>
             </Button>
           </div>
@@ -346,27 +322,28 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Plan Banner */}
-        <div className="mt-8 bg-gradient-hero rounded-2xl p-6 text-primary-foreground">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Crown className="w-5 h-5" />
-                <span className="font-semibold">Plano Free</span>
+        {/* Plan Banner - Only show if user has no contracts */}
+        {contracts.length === 0 && (
+          <div className="mt-8 bg-gradient-hero rounded-2xl p-6 text-primary-foreground">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-5 h-5" />
+                  <span className="font-semibold">Bem-vindo ao ContratoJusto!</span>
+                </div>
+                <p className="text-primary-foreground/80 text-sm">
+                  Escolha um plano e comece a criar documentos profissionais agora mesmo.
+                </p>
               </div>
-              <p className="text-primary-foreground/80 text-sm">
-                Você está usando 1 de 1 contrato ativo. Faça upgrade para
-                contratos ilimitados.
-              </p>
+              <Button
+                className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0"
+                asChild
+              >
+                <Link to="/precos">Ver planos</Link>
+              </Button>
             </div>
-            <Button
-              className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0"
-              asChild
-            >
-              <Link to="/precos">Ver planos</Link>
-            </Button>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Delete Confirmation Dialog */}

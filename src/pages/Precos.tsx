@@ -160,7 +160,7 @@ const Precos = () => {
                   className="w-full"
                   asChild
                 >
-                  <Link to="/auth?mode=signup">
+                  <Link to={plan.price === "0" ? "/auth?mode=signup" : "/checkout"}>
                     {plan.cta}
                     {plan.popular && <ArrowRight className="w-5 h-5 ml-2" />}
                   </Link>
