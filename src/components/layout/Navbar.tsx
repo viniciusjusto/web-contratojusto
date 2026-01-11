@@ -1,8 +1,17 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, FileText } from "lucide-react";
+import { Menu, X, FileText, LogOut, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -14,6 +23,13 @@ const navLinks = [
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
@@ -45,12 +61,36 @@ export const Navbar = () => {
         </div>
 
         <div className="hidden lg:flex items-center gap-3">
-          <Button variant="ghost" asChild>
-            <Link to="/auth">Entrar</Link>
-          </Button>
-          <Button variant="hero" asChild>
-            <Link to="/auth?mode=signup">Começar grátis</Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <UserIcon className="w-4 h-4" />
+                  {user.user_metadata?.full_name || user.email}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/auth">Entrar</Link>
+              </Button>
+              <Button variant="hero" asChild>
+                <Link to="/auth?mode=signup">Começar grátis</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -88,16 +128,42 @@ export const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="outline" asChild className="w-full">
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>
-                    Entrar
-                  </Link>
-                </Button>
-                <Button variant="hero" asChild className="w-full">
-                  <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>
-                    Começar grátis
-                  </Link>
-                </Button>
+                {user ? (
+                  <>
+                    <div className="px-2 py-2 text-sm text-muted-foreground">
+                      {user.user_metadata?.full_name || user.email}
+                    </div>
+                    <Button variant="outline" asChild className="w-full">
+                      <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                        Dashboard
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full text-destructive"
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleSignOut();
+                      }}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sair
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild className="w-full">
+                      <Link to="/auth" onClick={() => setIsOpen(false)}>
+                        Entrar
+                      </Link>
+                    </Button>
+                    <Button variant="hero" asChild className="w-full">
+                      <Link to="/auth?mode=signup" onClick={() => setIsOpen(false)}>
+                        Começar grátis
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, signIn, user } = useAuth();
   
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "signup");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,22 +28,65 @@ const Auth = () => {
     setIsLogin(searchParams.get("mode") !== "signup");
   }, [searchParams]);
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    toast({
-      title: isLogin ? "Bem-vindo de volta!" : "Conta criada com sucesso!",
-      description: isLogin
-        ? "Redirecionando para seu dashboard..."
-        : "Agora você pode começar a criar contratos.",
-    });
-
-    setIsLoading(false);
-    navigate("/dashboard");
+    try {
+      if (isLogin) {
+        // Login
+        const { error } = await signIn(formData.email, formData.password);
+        
+        if (error) {
+          toast({
+            title: "Erro ao entrar",
+            description: error.message === "Invalid login credentials"
+              ? "Email ou senha incorretos"
+              : error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Bem-vindo de volta!",
+            description: "Redirecionando para seu dashboard...",
+          });
+          navigate("/dashboard");
+        }
+      } else {
+        // Sign up
+        const { error } = await signUp(formData.email, formData.password, formData.name);
+        
+        if (error) {
+          toast({
+            title: "Erro ao criar conta",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Verifique seu email para confirmar a conta.",
+          });
+          // Redirect to login
+          navigate("/auth");
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,12 +193,12 @@ const Auth = () => {
 
             {isLogin && (
               <div className="flex justify-end">
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-accent hover:underline"
                 >
                   Esqueceu a senha?
-                </a>
+                </Link>
               </div>
             )}
 
