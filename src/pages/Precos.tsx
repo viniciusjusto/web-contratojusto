@@ -1,58 +1,34 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, X, ArrowRight, Zap } from "lucide-react";
+import { CheckCircle2, X, ArrowRight, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
 
 const plans = [
   {
-    name: "Free",
+    name: "Gratuito",
     price: "0",
-    description: "Para quem está começando e quer testar a plataforma.",
+    description: "Para conhecer a plataforma",
+    tagline: "",
     features: [
-      { text: "1 contrato ativo", included: true },
-      { text: "Modelos básicos", included: true },
-      { text: "Exportação em PDF", included: true },
-      { text: "Todos os modelos", included: false },
-      { text: "Personalização avançada", included: false },
-      { text: "Exportação DOCX", included: false },
-      { text: "Múltiplos usuários", included: false },
+      { text: "✅ Acesso à plataforma", included: true },
     ],
-    cta: "Começar grátis",
+    cta: "Criar conta grátis",
     popular: false,
   },
   {
-    name: "Pro",
-    price: "49",
-    description: "Para profissionais e pequenas empresas.",
+    name: "Plano Start",
+    price: "59",
+    description: "Para quem está construindo ou ajustando um produto digital",
+    tagline: "Assine por um mês, gere tudo, cancele quando quiser.",
     features: [
-      { text: "Contratos ilimitados", included: true },
-      { text: "Todos os modelos", included: true },
-      { text: "Exportação PDF e DOCX", included: true },
-      { text: "Personalização avançada", included: true },
-      { text: "Histórico de versões", included: true },
-      { text: "Suporte prioritário", included: true },
-      { text: "Múltiplos usuários", included: false },
+      { text: "🔁 Geração ilimitada", included: true },
+      { text: "🕓 Histórico de versões", included: true },
+      { text: "📄 PDF + Word editável", included: true },
+      { text: "❌ Sem fidelidade", included: true },
     ],
-    cta: "Assinar Pro",
+    cta: "Começar agora",
     popular: true,
-  },
-  {
-    name: "Business",
-    price: "149",
-    description: "Para empresas que precisam de gestão em equipe.",
-    features: [
-      { text: "Tudo do Pro", included: true },
-      { text: "Múltiplos usuários", included: true },
-      { text: "Gestão por empresa", included: true },
-      { text: "Templates customizados", included: true },
-      { text: "API de integração", included: true },
-      { text: "Suporte dedicado", included: true },
-      { text: "Treinamento incluído", included: true },
-    ],
-    cta: "Contatar vendas",
-    popular: false,
   },
 ];
 
@@ -60,28 +36,26 @@ const faqs = [
   {
     question: "Posso cancelar a qualquer momento?",
     answer:
-      "Sim! Você pode cancelar sua assinatura a qualquer momento. Não há multas ou taxas de cancelamento.",
+      "Sim! Não há fidelidade. Assine por um mês, gere todos os documentos que precisar e cancele quando quiser, sem multas ou taxas.",
   },
   {
-    question: "Os contratos são válidos juridicamente?",
+    question: "Os documentos são válidos juridicamente?",
     answer:
-      "Sim. Nossos modelos são revisados por advogados especializados e seguem a legislação brasileira vigente.",
+      "Sim. Nossos documentos são elaborados seguindo a LGPD e a legislação brasileira vigente, prontos para uso.",
   },
   {
-    question: "Posso fazer upgrade ou downgrade do plano?",
+    question: "O que são os ajustes livres?",
     answer:
-      "Sim, você pode alterar seu plano a qualquer momento. O valor será calculado proporcionalmente.",
+      "Você pode personalizar seus documentos com funcionalidades específicas como cookies, pagamentos, login social, analytics e muito mais, conforme as necessidades do seu produto.",
   },
   {
-    question: "Há período de teste para os planos pagos?",
+    question: "Posso gerar quantos documentos eu quiser?",
     answer:
-      "Oferecemos 14 dias de teste gratuito para o plano Pro, sem necessidade de cartão de crédito.",
+      "Sim! Com o Plano Start você tem geração ilimitada de Termos de Uso e Política de Privacidade durante todo o período de assinatura.",
   },
 ];
 
 const Precos = () => {
-  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
-
   return (
     <Layout>
       {/* Header */}
@@ -89,13 +63,22 @@ const Precos = () => {
         <div className="absolute inset-0 bg-gradient-hero opacity-5" />
         <div className="container relative">
           <div className="text-center max-w-2xl mx-auto mb-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full text-accent text-sm font-medium mb-6"
+            >
+              <Rocket className="w-4 h-4" />
+              Simples e direto ao ponto
+            </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4"
             >
-              Planos para <span className="text-accent">cada necessidade</span>
+              Um plano, <span className="text-accent">tudo ilimitado</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -103,48 +86,12 @@ const Precos = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-lg text-muted-foreground"
             >
-              Escolha o plano ideal para o seu negócio. Sem surpresas, sem taxas
-              ocultas.
+              Sem complicação. Sem pegadinhas. Apenas o que você precisa.
             </motion.p>
           </div>
 
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-12">
-            <span
-              className={`text-sm font-medium ${
-                billing === "monthly"
-                  ? "text-foreground"
-                  : "text-muted-foreground"
-              }`}
-            >
-              Mensal
-            </span>
-            <button
-              onClick={() =>
-                setBilling(billing === "monthly" ? "yearly" : "monthly")
-              }
-              className="relative w-14 h-7 bg-muted rounded-full transition-colors"
-            >
-              <div
-                className={`absolute top-1 w-5 h-5 bg-accent rounded-full transition-all ${
-                  billing === "yearly" ? "left-8" : "left-1"
-                }`}
-              />
-            </button>
-            <span
-              className={`text-sm font-medium ${
-                billing === "yearly"
-                  ? "text-foreground"
-                  : "text-muted-foreground"
-              }`}
-            >
-              Anual{" "}
-              <span className="text-accent font-semibold">(-20%)</span>
-            </span>
-          </div>
-
           {/* Plans Grid */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {plans.map((plan, index) => (
               <motion.div
                 key={plan.name}
@@ -158,58 +105,64 @@ const Precos = () => {
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-accent text-accent-foreground rounded-full text-sm font-medium flex items-center gap-1">
-                    <Zap className="w-4 h-4" />
-                    Mais popular
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-accent text-accent-foreground rounded-full text-sm font-medium flex items-center gap-2">
+                    <Rocket className="w-4 h-4" />
+                    Melhor escolha
                   </div>
                 )}
 
                 <div className="text-center mb-8">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                  <h3 className="text-2xl font-semibold text-foreground mb-2">
                     {plan.name}
                   </h3>
-                  <div className="flex items-baseline justify-center gap-1">
+                  <div className="flex items-baseline justify-center gap-1 mb-3">
                     <span className="text-sm text-muted-foreground">R$</span>
-                    <span className="text-5xl font-bold text-foreground">
-                      {billing === "yearly"
-                        ? Math.round(parseInt(plan.price) * 0.8)
-                        : plan.price}
+                    <span className="text-6xl font-bold text-foreground">
+                      {plan.price}
                     </span>
                     <span className="text-sm text-muted-foreground">/mês</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-base text-muted-foreground mb-2">
                     {plan.description}
                   </p>
+                  {plan.tagline && (
+                    <p className="text-sm font-medium text-accent italic">
+                      "{plan.tagline}"
+                    </p>
+                  )}
                 </div>
 
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <li
-                      key={i}
-                      className={`flex items-center gap-3 text-sm ${
-                        feature.included
-                          ? "text-foreground"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {feature.included ? (
-                        <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
-                      ) : (
-                        <X className="w-5 h-5 text-muted-foreground/50 shrink-0" />
-                      )}
-                      {feature.text}
-                    </li>
-                  ))}
-                </ul>
+                <div className="bg-secondary/50 rounded-xl p-6 mb-8">
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, i) => (
+                      <li
+                        key={i}
+                        className={`flex items-start gap-3 text-base ${
+                          feature.included
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {feature.included ? (
+                          <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                        ) : (
+                          <X className="w-5 h-5 text-muted-foreground/50 shrink-0 mt-0.5" />
+                        )}
+                        <span>{feature.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 <Button
                   variant={plan.popular ? "hero" : "outline"}
+                  size="lg"
                   className="w-full"
                   asChild
                 >
                   <Link to="/auth?mode=signup">
                     {plan.cta}
-                    {plan.popular && <ArrowRight className="w-4 h-4 ml-1" />}
+                    {plan.popular && <ArrowRight className="w-5 h-5 ml-2" />}
                   </Link>
                 </Button>
               </motion.div>
@@ -249,16 +202,20 @@ const Precos = () => {
       <section className="py-16 lg:py-24 bg-gradient-hero text-primary-foreground">
         <div className="container text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ainda tem dúvidas?
+            Pronto para começar?
           </h2>
-          <p className="text-lg text-primary-foreground/80 mb-8">
-            Entre em contato com nossa equipe. Estamos aqui para ajudar.
+          <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            Assine hoje e tenha acesso ilimitado. Cancele quando quiser, sem compromisso.
           </p>
           <Button
             size="xl"
             className="bg-accent text-accent-foreground hover:bg-accent/90"
+            asChild
           >
-            Falar com especialista
+            <Link to="/auth?mode=signup">
+              Começar agora
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
           </Button>
         </div>
       </section>

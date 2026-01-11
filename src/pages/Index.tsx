@@ -13,13 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout/Layout";
 
-const stats = [
-  { value: "10K+", label: "Contratos criados" },
-  { value: "2.5K+", label: "Empresas ativas" },
-  { value: "99.9%", label: "Uptime garantido" },
-  { value: "< 5min", label: "Tempo médio" },
-];
-
 const features = [
   {
     icon: Zap,
@@ -115,26 +108,6 @@ const Index = () => {
               </Button>
             </motion.div>
           </div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-20 grid grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="text-center p-6 rounded-2xl bg-card shadow-card"
-              >
-                <div className="text-3xl md:text-4xl font-bold text-accent mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
